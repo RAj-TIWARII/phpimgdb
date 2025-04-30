@@ -11,6 +11,9 @@ if (!$con) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
+$uploadedImagePath = '';
+$submittedData = false;
+
 // Form submission handling
 if (isset($_POST['submit'])) {
     $username = $_POST['username'];
@@ -19,7 +22,7 @@ if (isset($_POST['submit'])) {
 
     if (!empty($_FILES['image']['name'])) {
         $image = basename($_FILES['image']['name']);
-        $target_dir = "uploads/";
+        $target_dir = "indeximage/";
         $target_path = $target_dir . $image;
 
         // Create directory if not exists
@@ -29,20 +32,20 @@ if (isset($_POST['submit'])) {
 
         // Move uploaded file
         if (!move_uploaded_file($_FILES['image']['tmp_name'], $target_path)) {
-            echo "<script>alert('Failed to upload image')</script>";
+            echo "<script>alert('Failed to upload image');</script>";
             exit;
+        } else {
+            $uploadedImagePath = $target_path;
         }
     }
-	
-	
-	
 
     // Insert into DB
     $query = "INSERT INTO insideimagedb (username, password, image) VALUES ('$username', '$userpass', '$image')";
     if (mysqli_query($con, $query)) {
-        echo "<script>alert('Record submitted successfully!')</script>";
+        echo "<script>alert('Record submitted successfully!');</script>";
+        $submittedData = true;
     } else {
-        echo "Error: " . mysqli_error($con);
+        echo "<script>alert('Database error: " . mysqli_error($con) . "');</script>";
     }
 }
 ?>
@@ -69,6 +72,14 @@ if (isset($_POST['submit'])) {
         ::placeholder {
             color: rgb(7, 7, 7) !important;
         }
+        .profile-img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #17a2b8;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -85,7 +96,7 @@ if (isset($_POST['submit'])) {
                             <input type="text" name="password" class="form-control" placeholder="Password" required>
                         </div>
                         <div class="col-md-6">
-                            <input type="file" name="image" class="form-control">
+                            <input type="file" name="image" class="form-control" accept="image/*" required>
                         </div>
                     </div>
                     <div class="row justify-content-center mt-3">
@@ -94,6 +105,13 @@ if (isset($_POST['submit'])) {
                         </div>
                     </div>
                 </form>
+
+                <?php if ($submittedData && $uploadedImagePath): ?>
+                    <div class="text-center">
+                        <h5 class="mt-4">Uploaded Profile Image:</h5>
+                        <img src="<?php echo $uploadedImagePath; ?>" alt="Profile Image" class="profile-img">
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -108,5 +126,3 @@ if (isset($_POST['submit'])) {
     </footer>
 </body>
 </html>
-
-
