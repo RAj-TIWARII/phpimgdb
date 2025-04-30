@@ -1,59 +1,112 @@
 <?php
-$host = "localhost";
-$user = "root";
-$pass = "";
-$dbname = "phpimagedb";
-$conn = new mysqli($host, $user, $pass, $dbname);
+// Start of the file
+$localhost = 'localhost';
+$root = 'root';
+$password = '';
+$db = 'phpimagedb';
 
-if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
+// Connect to MySQL
+$con = mysqli_connect($localhost, $root, $password, $db);
+if (!$con) {
+    die("Connection failed: " . mysqli_connect_error());
 }
 
-$success = false;
-$userData = null;
+// Form submission handling
+if (isset($_POST['submit'])) {
+    $username = $_POST['username'];
+    $userpass = $_POST['password'];
+    $image = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $username = $_POST['username'];
-  $password = $_POST['password'];
-  $image = $_FILES['image']['name'];
-  $tmp = $_FILES['image']['tmp_name'];
-  $folder = "indeximage/" . basename($image);
+    if (!empty($_FILES['image']['name'])) {
+        $image = basename($_FILES['image']['name']);
+        $target_dir = "uploads/";
+        $target_path = $target_dir . $image;
 
-  if (move_uploaded_file($tmp, $folder)) {
-    $sql = "INSERT INTO insideimagedb (username, password, image) VALUES ('$username', '$password', '$image')";
-    if ($conn->query($sql) === TRUE) {
-      $success = true;
+        // Create directory if not exists
+        if (!is_dir($target_dir)) {
+            mkdir($target_dir, 0777, true);
+        }
 
-      // Fetch the just-inserted data
-      $lastId = $conn->insert_id;
-      $result = $conn->query("SELECT * FROM insideimagedb WHERE id = $lastId");
-      if ($result->num_rows > 0) {
-        $userData = $result->fetch_assoc();
-      }
+        // Move uploaded file
+        if (!move_uploaded_file($_FILES['image']['tmp_name'], $target_path)) {
+            echo "<script>alert('Failed to upload image')</script>";
+            exit;
+        }
     }
-  }
+	
+	
+	
+
+    // Insert into DB
+    $query = "INSERT INTO insideimagedb (username, password, image) VALUES ('$username', '$userpass', '$image')";
+    if (mysqli_query($con, $query)) {
+        echo "<script>alert('Record submitted successfully!')</script>";
+    } else {
+        echo "Error: " . mysqli_error($con);
+    }
 }
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-  <title>One Page Form + Upload</title>
-</head>
-<body style="background:#111;color:white;font-family:sans-serif;text-align:center;padding-top:50px;">
-  <h2>Submit Your Profile</h2>
-  <form action="" method="POST" enctype="multipart/form-data">
-    <input type="text" name="username" placeholder="Username" required><br><br>
-    <input type="password" name="password" placeholder="Password" required><br><br>
-    <input type="file" name="image" accept="image/*" required><br><br>
-    <input type="submit" value="Submit" style="padding:10px 20px;"><br><br>
-  </form>
 
-  <?php if ($success && $userData): ?>
-    <script>alert('Form submitted successfully!');</script>
-    <h3>Welcome, <?php echo htmlspecialchars($userData['username']); ?>!</h3>
-    <img src="indeximage/<?php echo htmlspecialchars($userData['image']); ?>" 
-         alt="Profile Image" 
-         style="width:200px;height:200px;border-radius:50%;border:3px solid white;box-shadow:0 0 15px white;">
-  <?php endif; ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Registration</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(rgb(255, 255, 255), rgba(255, 255, 255, 0.801)), url(images/bst.jpg);
+            background-attachment: fixed;
+            background-size: cover;
+            color: black;
+            padding: 22px;
+        }
+        .form-control {
+            border-radius: 20px;
+            margin-top: 11px;
+        }
+        ::placeholder {
+            color: rgb(7, 7, 7) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h3 class="text-center mb-4">Student Registration</h3>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <form method="post" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="text" name="username" class="form-control" placeholder="Username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" name="password" class="form-control" placeholder="Password" required>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="file" name="image" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row justify-content-center mt-3">
+                        <div class="col-md-3">
+                            <input type="submit" name="submit" value="Submit" class="btn btn-info rounded-pill w-100">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="container-fluid fixed-bottom bg-dark text-white text-center p-2">
+        <div class="row">
+            <div class="col">f</div>
+            <div class="col">f</div>
+            <div class="col">f</div>
+            <div class="col">f</div>
+        </div>
+    </footer>
 </body>
 </html>
+
+
